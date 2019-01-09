@@ -86,14 +86,6 @@ export default {
         },
         searchLoading() {
             this.loading = !this.loading;
-            if (this.loading) {
-                this.$Message.loading({
-                    content: '加载中...',
-                    duration: 0
-                });
-            } else {
-                this.$Message.destroy()
-            }
         },
         getRegion(pid) {
             return this.$fly.post('/dataVisualization/regionalism', {

@@ -1,4 +1,4 @@
-module.exports.line = function(xAxis, series) {
+const line = function(xAxis, series) {
     return {
         xAxis: {
             type: 'category',
@@ -7,9 +7,8 @@ module.exports.line = function(xAxis, series) {
         },
         yAxis: {
             type: 'value',
-            axisLine: {
-                show: false
-            },
+            axisLine: { show: false },
+            axisTick: { show: false },
             splitLine: {
                 lineStyle: { type: 'dashed' }
             }
@@ -35,18 +34,18 @@ module.exports.line = function(xAxis, series) {
     }
 }
 
-module.exports.map = function() {
+const map = function(data) {
     return {
         tooltip: {
             trigger: 'item',
-            formatter: '{b}<br/>{c} (p / km2)'
+            formatter: '{b}<br/>投诉量：{c}起'
         },
         visualMap: {
             left: 'right',
             text:['高','低'],
             realtime: false,
             itemWidth: 10,
-            itemHeight: 80,
+            itemHeight: 60,
             inRange: {
                 color: ['lightskyblue','yellow', 'orangered']
             }
@@ -54,8 +53,8 @@ module.exports.map = function() {
         series: [
             {
                 type: 'map',
-                mapType: 'yunnan', // 自定义扩展图表类型
-                aspectScale: 0.9,
+                mapType: 'yunnan', // 云南地图JSON
+                aspectScale: 0.88,
                 zoom: 1.2,
                 itemStyle:{
                     areaColor: 'lightskyblue'
@@ -67,10 +66,7 @@ module.exports.map = function() {
                         show: true
                     }
                 },
-                data:[
-                    {name: '昆明', value: 20057.34},
-                    {name: '大理', value: 15477.48},
-                ],
+                data: data || [{name: '昆明', value: 20057.34}],
                 // 自定义名称映射
                 nameMap: {
                     '迪庆藏族自治州': '迪庆',
@@ -94,3 +90,83 @@ module.exports.map = function() {
         ]
     }
 }
+
+const objOfList = function(list, name) {
+    let obj = {};
+    for (let v of list) {
+        if (v.name == name) {
+            obj = v;
+        }
+    }
+    return obj
+}
+
+const timeBar = function(name, xAxis, series, list) {
+    let option = {
+        tooltip: {
+            trigger: 'item',
+            formatter: function(params) {
+                if (!list) return '';
+                let obj = objOfList(list, params.name);
+                if (params.componentType == 'markLine') {
+                    let data = params.data;
+                    return `${params.name}<br/>
+                    ${parseInt(data.value)}分钟`
+                } else {
+                    return `${params.name}<br/>
+                    ${params.seriesName}：${obj.doneMin}分钟${obj.doneSec}秒<br/>
+                    投诉量：${obj.value}`
+                }
+            }
+        },
+        legend: {
+            data:[name || ''],
+            bottom: 1,
+        },
+        grid: {
+            left: 'left',
+            top: '30',
+            right: '55',
+            bottom: '40',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: xAxis || []
+        },
+        yAxis: {
+            type: 'value',
+            axisLine: { show: false },
+            axisTick: { show: false },
+            axisLabel: { formatter: '{value}分钟' },
+            splitLine: {
+                lineStyle: { type: 'dashed' }
+            }
+        },
+        series: [{
+            name: name || '',
+            data: series || [],
+            type: 'bar',
+            barWidth: 10,
+            itemStyle: {
+                color: '#0D6BE3'
+            },
+            markLine: {
+                data: [
+                    {type: 'average', name: '平均值'}
+                ],
+                label: {
+                    formatter: '{b}'
+                },
+                lineStyle: { type: 'solid' }
+            }
+        }]
+    };
+    return option;
+}
+
+export default {
+    line,
+    map,
+    timeBar
+};

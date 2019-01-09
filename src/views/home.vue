@@ -31,7 +31,7 @@ export default {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
 .home {
     .block {
         margin: 10px auto;
