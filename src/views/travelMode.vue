@@ -121,7 +121,8 @@ export default {
     },
     mounted() {
         console.log('userid:', userid);
-        this.getList({});
+        // this.getList({});
+        this.$refs.searchBar.onSubmit();
     }
 }
 </script>

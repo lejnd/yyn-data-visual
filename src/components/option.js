@@ -91,48 +91,53 @@ const map = function(data) {
     }
 }
 
-const objOfList = function(list, name) {
-    let obj = {};
-    for (let v of list) {
-        if (v.name == name) {
-            obj = v;
-        }
-    }
-    return obj
-}
-
-const timeBar = function(name, xAxis, series, list) {
+const timeBar = function(list) {
     let option = {
         tooltip: {
             trigger: 'item',
             formatter: function(params) {
                 if (!list) return '';
-                let obj = objOfList(list, params.name);
+                const arr = list.filter(item => item.name == params.name)
+                const obj = arr[0] || {};
                 if (params.componentType == 'markLine') {
-                    let data = params.data;
+                    const data = params.data;
                     return `${params.name}<br/>
                     ${parseInt(data.value)}分钟`
                 } else {
-                    return `${params.name}<br/>
-                    ${params.seriesName}：${obj.doneMin}分钟${obj.doneSec}秒<br/>
+                    // switch (params.seriesIndex) {
+                    //     case 0:
+                    //         return `地区：${params.name}<br/>
+                    //         ${params.seriesName}：${params.value}分钟<br/>`
+                    //     case 1:
+                    //         return `地区：${params.name}<br/>
+                    //         ${params.seriesName}：${params.value}<br/>`
+                    //     default:
+                    //         break;
+                    // }
+                    return `地区：${params.name}<br/>
+                    ${params.seriesName}：${params.value}分钟<br/>
                     投诉量：${obj.value}`
                 }
             }
         },
         legend: {
-            data:[name || ''],
+            data: ['平均办结时长', '投诉量'],
             bottom: 1,
         },
         grid: {
             left: 'left',
             top: '30',
-            right: '55',
+            right: '66',
             bottom: '40',
             containLabel: true
         },
         xAxis: {
             type: 'category',
-            data: xAxis || []
+            data: list ? list.map((item) => item.name) : [],
+            axisLabel: {
+                interval: 0,
+                // rotate:40
+            }
         },
         yAxis: {
             type: 'value',
@@ -144,29 +149,291 @@ const timeBar = function(name, xAxis, series, list) {
             }
         },
         series: [{
-            name: name || '',
-            data: series || [],
+            name: '平均办结时长',
+            data: list ? list.map((item) => `${item.doneMin}`) : [],
             type: 'bar',
-            barWidth: 10,
+            barWidth: 15,
             itemStyle: {
-                color: '#0D6BE3'
+                color: '#338BFF'
             },
             markLine: {
                 data: [
-                    {type: 'average', name: '平均值'}
+                    {type: 'average', name: '全省平均值'}
                 ],
                 label: {
                     formatter: '{b}'
                 },
                 lineStyle: { type: 'solid' }
             }
+        }, 
+        // {
+        //     name: '投诉量',
+        //     data: list ? list.map((item) => item.value) : [],
+        //     type: 'bar',
+        //     barWidth: 10,
+        //     itemStyle: {
+        //         color: '#2FC3D2'
+        //     }
+        // }
+        ]
+    };
+    return option;
+}
+
+const rateBar = function(list) {
+    let option = {
+        tooltip: {
+            trigger: 'item',
+            formatter: function(params) {
+                if (!list) return '';
+                const arr = list.filter(item => item.name == params.name)
+                const obj = arr[0] || {};
+                if (params.componentType == 'markLine') {
+                    const data = params.data;
+                    return `${params.name}<br/>
+                    ${data.value}%`
+                } else {
+                    // switch (params.seriesIndex) {
+                    //     case 0:
+                    //         return `地区：${params.name}<br/>
+                    //         ${params.seriesName}：${params.value}%<br/>`
+                    //     case 1:
+                    //         return `地区：${params.name}<br/>
+                    //         ${params.seriesName}：${params.value}<br/>`
+                    //     default:
+                    //         break;
+                    // }
+                    return `地区：${params.name}<br/>
+                    ${params.seriesName}：${params.value}分钟<br/>
+                    投诉量：${obj.value}`
+                }
+            }
+        },
+        legend: {
+            data:['24小时办结率', '投诉量'],
+            bottom: 1,
+        },
+        grid: {
+            left: 'left',
+            top: '30',
+            right: '66',
+            bottom: '40',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: list ? list.map((item) => item.name) : [],
+            axisLabel: {
+                interval: 0,
+                // rotate:40
+            }
+        },
+        yAxis: {
+            type: 'value',
+            axisLine: { show: false },
+            axisTick: { show: false },
+            axisLabel: { formatter: '{value}%' },
+            splitLine: {
+                lineStyle: { type: 'dashed' }
+            }
+        },
+        series: [{
+            name: '24小时办结率',
+            data: list ? list.map((item) => item.rate.replace('%', '')) : [],
+            type: 'bar',
+            barWidth: 15,
+            itemStyle: {
+                color: '#0D6BE3'
+            },
+            markLine: {
+                data: [
+                    {type: 'average', name: '全省平均值'}
+                ],
+                label: {
+                    formatter: '{b}'
+                },
+                lineStyle: { type: 'solid' }
+            }
+        },
+        // {
+        //     name: '投诉量',
+        //     data: list ? list.map((item) => item.value) : [],
+        //     type: 'bar',
+        //     barWidth: 10,
+        //     itemStyle: {
+        //         color: '#2FC3D2'
+        //     }
+        // }
+        ]
+    };
+    return option;
+}
+
+const accountBar = function(list) {
+    let option = {
+        tooltip: {
+            trigger: 'item',
+            formatter: '{b}<br/>{a}<br/>{c}'
+        },
+        legend: {
+            data: ['使用中', '待激活'],
+            bottom: 1,
+        },
+        grid: {
+            left: 'left',
+            top: '30',
+            right: '30',
+            bottom: '40',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: list ? list.name : [],
+            axisLabel: {
+                interval: 0,
+                // rotate:40
+            }
+        },
+        yAxis: {
+            type: 'value',
+            axisLine: { show: false },
+            axisTick: { show: false },
+            splitLine: {
+                lineStyle: { type: 'dashed' }
+            }
+        },
+        series: [{
+            name: '使用中',
+            data: list ? list.onlineActive : [],
+            type: 'bar',
+            barWidth: 10,
+            itemStyle: {
+                color: '#0D6BE3'
+            }
+        }, {
+            name: '待激活',
+            data: list ? list.onlineNoActive : [],
+            type: 'bar',
+            barWidth: 10,
+            itemStyle: {
+                color: '#2FC3D2'
+            }
         }]
     };
     return option;
 }
 
+const assessPie = function(list, redis) {
+    const data = list ? list.map(item => Object.assign({}, item, { name: item.name.replace('（','(').replace('）',')') })) : [];
+    const option = {
+        tooltip: {
+            trigger: 'item',
+            formatter: "{a} <br/>{b}: {c} ({d}%)"
+        },
+        // legend: {
+        //     data: list ? list.map(item => item.name) : []
+        // },
+        color:['#4C6293', '#FF7656', '#5AD5E0', '#338BFF', '#29CC85'],
+        series: [
+            {
+                name:'游客评价情况',
+                type:'pie',
+                radius: redis,
+                center: ['50%', '50%'],
+                minAngle: 3,           　　 //最小的扇区角度（0 ~ 360），用于防止某个值过小导致扇区太小影响交互
+                avoidLabelOverlap: true,   //是否启用防止标签重叠策略
+                hoverAnimation: false,
+                label: {
+                    normal: {
+                        formatter: '{per|{c}起{d}%}\n{a|{b}}\n{hr|}',
+                        rich: {
+                            a: {
+                                color: '#999999',
+                                fontSize: 11,
+                                lineHeight: 20,
+                                align: 'center'
+                            },
+                            hr: {
+                                width: '100%',
+                                height: 0,
+                                alien:'center'
+                            },
+                            per: {
+                                color: '#000000',
+                                align: 'center',
+                                fontSize: 13,
+                            }
+                        }
+                    }
+                },
+                labelLine: {
+                    normal: {
+                        show: false
+                    }
+                },
+                data: data
+            }
+        ]
+    }
+    return option
+}
+
+const radar = function(data, redis) {
+    const list = data.list || [];
+    const max = Math.max.apply(null, list.map(item => item.value)) * 1.3
+    const option = {
+        tooltip: {
+            trigger: 'item',
+            // formatter: "{a} <br/>{b}: {c} ({d}%)"
+        },
+        radar: [
+            {
+                indicator: list ? list.map(item => Object.assign({}, item, {
+                    text: item.name,
+                    max: max > data.total ? data.total : max
+                })) : [],
+                radius: redis,
+                center: ['50%','60%'],
+                splitNumber: 3,
+                name: {
+                    formatter: function(a, b) {
+                        return `${b.value}\n${a}`
+                    }
+                }
+            }
+        ],
+        series: [
+            {
+                type: 'radar',
+                name: `投诉总量：${data.total}`,
+                radarIndex: 0,
+                data: [
+                    {
+                        value: list ? list.map(item => item.value) : [],
+                    }
+                ],
+                itemStyle: {
+                    normal: {
+                        color: '#5AD5E0'
+                    }
+                },
+                areaStyle: {
+                    normal: {
+                        opacity: 0.4
+                    }
+                }
+            }
+        ]
+    };
+    return option
+}
+
 export default {
     line,
     map,
-    timeBar
+    timeBar,
+    rateBar,
+    accountBar,
+    assessPie,
+    radar
 };

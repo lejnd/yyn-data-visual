@@ -94,9 +94,35 @@
     <div class="flex-box">
         <div class="one-third">
             <h3 class="box-title">账号开通数</h3>
+            <div class="deco" v-if="account">
+                <div class="gov">政府账号<strong>{{account.gov}}</strong></div>
+                <div class="acc-tree">
+                    <span>• 指挥中心：{{account.center}}（{{account.centerRate}}）</span>
+                    <span>• 横行企业：{{account.department}}（{{account.departmentRate}}）</span>
+                </div>
+            </div>
+            <div class="bar-chart" id="account"></div>
         </div>
-        <div class="one-third"></div>
-        <div class="one-third"></div>
+        <div class="one-third">
+            <h3 class="box-title">游客评价情况
+                <RadioGroup v-model="assessType" style="margin-left:20px" @on-change="getEvaluation(queryCopy)">
+                    <Radio label="0">全部（含系统自动评价）</Radio>
+                    <Radio label="1">游客评价</Radio>
+                </RadioGroup>
+            </h3>
+            <div ref="assess_pie" class="bar-chart" id="assess_pie"></div>
+        </div>
+        <div class="one-third">
+            <h3 class="box-title">投诉对象分类</h3>
+            <div class="radar">
+                <div class="bar-chart" id="object_type"></div>
+                <div class="list">
+                    <div class="uli" v-for="item in objectTypes" :key="item.name">
+                        {{item.name}}:<span>{{item.value}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </template>
@@ -149,6 +175,11 @@ export default {
                 title: '投诉量'
             }],
             colRate: [{
+                type: 'index',
+                width: 60,
+                align: 'center',
+                title: '排序'
+            }, {
                 align: 'center',
                 key: 'name',
                 title: '地域分布'
@@ -165,14 +196,18 @@ export default {
                 key: 'overtime',
                 title: '超时量'
             }],
-            statisticalTypes: ['thread', 'region', '', 'complete'],
+            statisticalTypes: ['thread', 'region', '', 'complete', 'completeRate', 'account', 'evaluation', 'objectType'],
             tableRegion: [],
             tableDoneTime: [],
             tableRate: [],
             state: null,
             region: '',
             classify: '',
-            date: ''
+            date: '',
+            account: null,
+            assessType: '0',
+            objectTypes: [],
+            queryCopy: {},
         }
     },
     computed: {
@@ -198,35 +233,37 @@ export default {
             this.getTrend(query)
             .then(() => this.getRegion(query))
             .then(() => this.getDoneTime(query))
+            .then(() => this.getDoneRate(query))
+            .then(() => this.getAccount(query))
+            .then(() => this.getEvaluation(query))
+            .then(() => this.getObjectType(query))
         },
         getList(query, statisticalType) {
-            this.$refs.searchBar.searchLoading();
-            return this.$fly.post('/dataVisualization/display', {
-                data: {
-                    userid: userid,
-                    statisticalType: statisticalType,
-                    date: query.date || [],
-                    city: query.city || '',
-                    county: query.county || '',
-                    type: query.type || ''
-                }
+            const searchBar = this.$refs.searchBar || {};
+            searchBar.searchLoading();
+            const data = Object.assign({}, query, {
+                userid: userid,
+                statisticalType: statisticalType,
+                date: query.date || [],
+                city: query.city || '',
+                county: query.county || '',
+                type: query.type || ''
             })
+            this.queryCopy = data;
+            return this.$fly.post('/dataVisualization/display', { data: data })
             .then((res) => {
-                this.$refs.searchBar.searchLoading();
+                searchBar.searchLoading();
                 let data = res.data;
-                if (data) {
-                    // this.tableData = data.list;
-                    // this.region = data.region;
-                    // this.dateText = data.date;
-                    // this.initChart();
+                if (data && data !== '') {
                     return Promise.resolve(data)
                 } else {
-                    console.log('数据为空！', res.msg);
+                    return Promise.reject('模块 ' + statisticalType + ' ' + (res.msg || res || '请求错误'))
                 }
             })
             .catch((err) => {
-                console.log('请求失败：', err);
-                this.$refs.searchBar.searchLoading();
+                searchBar.searchLoading();
+                this.$Message.warning(err ? err.msg || err : '请求失败');
+                return Promise.resolve();
             })
         },
         // 请求投诉趋势
@@ -250,33 +287,51 @@ export default {
             return this.getList(query, this.statisticalTypes[3])
             .then((data) => {
                 this.tableDoneTime = data.list.map((item) => Object.assign({}, item, {
-                    time: `${item.doneMin}分钟${item.doneSec}秒`
+                    time: `${item.doneMin}分钟`
                 }));
                 this.region = data.region;
                 this.classify = data.classify;
                 this.date = data.date;
                 let name = '平均办结时长';
-                let xAxis = data.list.map((item) => item.name);
-                let series = data.list.map((item) => `${item.doneMin}.${item.doneSec}`);
-                let list = data.list;
-                this.initBar(name, xAxis, series, list)
+                let list = data.list.map((item) => item.name == '西双版纳' ? Object.assign({}, item, { name: '版纳' }) : item);
+                this.initBar(list)
             })
         },
         // 请求24小时办结率
-        getDoneTime(query) {
-            return this.getList(query, this.statisticalTypes[3])
+        getDoneRate(query) {
+            return this.getList(query, this.statisticalTypes[4])
             .then((data) => {
-                this.tableDoneTime = data.list.map((item) => Object.assign({}, item, {
-                    time: `${item.doneMin}分钟${item.doneSec}秒`
-                }));
-                this.region = data.region;
-                this.classify = data.classify;
-                this.date = data.date;
-                let name = '平均办结时长';
-                let xAxis = data.list.map((item) => item.name);
-                let series = data.list.map((item) => `${item.doneMin}.${item.doneSec}`);
-                let list = data.list;
-                this.initBar(name, xAxis, series, list)
+                this.tableRate = data.list;
+                let name = '24小时办结率';
+                let list = data.list.map((item) => item.name == '西双版纳' ? Object.assign({}, item, { name: '版纳' }) : item);
+                this.initRateBar(list)
+            })
+        },
+        // 请求账号开通数
+        getAccount(query) {
+            return this.getList(query, this.statisticalTypes[5])
+            .then((data) => {
+                this.account = data;
+                this.initAccountBar(data.list)
+            })
+        },
+        // 请求游客评价情况
+        getEvaluation(query) {
+            query = Object.assign({}, query, { assessType: this.assessType })
+            return this.getList(query, this.statisticalTypes[6])
+            .then((data) => {
+                this.initAssessPie(data.list)
+            })
+        },
+        // 请求投诉对象分类
+        getObjectType(query) {
+            return this.getList(query, this.statisticalTypes[7])
+            .then((data) => {
+                this.initRadar(data)
+                this.objectTypes = [
+                    { name: '投诉总量', value: data.total },
+                    ...data.list
+                ]
             })
         },
         // 初始化投诉趋势图
@@ -292,10 +347,53 @@ export default {
             let option = chartOption.map(data);
             this.initChart(id, option);
         },
-        // 初始化柱状体
-        initBar(name, xAxis, series, list) {
-            let id = 'done_time';
-            let option = chartOption.timeBar(name, xAxis, series, list)
+        // 初始化时间柱状体
+        initBar(list) {
+            const id = 'done_time';
+            const option = chartOption.timeBar(list)
+            this.initChart(id, option);
+        },
+        // 初始化比率柱状体
+        initRateBar(list) {
+            const id = 'rate';
+            const option = chartOption.rateBar(list)
+            this.initChart(id, option);
+        },
+        // 初始化账号柱状体
+        initAccountBar(list) {
+            const id = 'account';
+            const option = chartOption.accountBar(list)
+            this.initChart(id, option);
+        },
+        // 初始化游客评价饼图
+        initAssessPie(list) {
+            const id = 'assess_pie';
+            const width = this.$refs.assess_pie.clientWidth;
+            let redis = ['20%', '40%'];
+            if (width > 420) {
+                redis = ['30%', '55%']
+            } else if (width < 355 && width >= 305) {
+                redis = ['15%', '35%']
+            } else if (width < 305) {
+                redis = ['10%', '25%']
+            }
+            const option = chartOption.assessPie(list, redis)
+            this.initChart(id, option);
+        },
+        // 初始化游客评价饼图
+        initRadar(data) {
+            const id = 'object_type';
+            const width = this.$refs.assess_pie.clientWidth;
+            console.log(width);
+            let redis = 80
+            if (width < 355 && width >= 305) {
+                redis = 50
+            } else if (width < 305 && width >= 290) {
+                redis = 30
+            } else if (width < 290) {
+                redis = 25
+            }
+            const option = chartOption.radar(data, redis)
             this.initChart(id, option);
         },
         initChart(id = '', option = {}) {
@@ -305,7 +403,7 @@ export default {
         }
     },
     mounted () {
-        this.request({});
+        this.$refs.searchBar.onSubmit();
     }
 }
 </script>
@@ -313,6 +411,11 @@ export default {
 <style lang="less">
 .area-data {
     padding: 15px;
+    min-width: 1000px;
+    overflow: scroll;
+    ul {
+        
+    }
     .box-title {
         width: 100%;
         margin-bottom: 20px;
@@ -377,11 +480,61 @@ export default {
             td {
                 height: 25px;
             }
+            .ivu-table-cell {
+                padding: 0;
+            }
         }
         .one-third {
+            padding: 15px;
             width: 32%;
-            min-height: 300px;
             border: 1px solid #D8EDFD;
+            .deco {
+                width: 100%;
+                display: inline-flex;
+                align-items: center;
+                justify-content:space-around;
+                // background-color: #808080;
+                .gov {
+                    // width: 30%;
+                    vertical-align: middle;
+                    strong {
+                        font-size: 22px;
+                        padding: 0 6px;
+                        font-weight: 400;
+                        color: #000;
+                        vertical-align: sub;
+                    }
+                }
+                .acc-tree {
+                    width: 60%;
+                    // height: 100px;
+                    span {
+                        display: block;
+                        white-space: nowrap;
+                    }
+                }
+            }
+            .bar-chart {
+                min-height: 300px;
+            }
+            .radar {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                .bar-chart {
+                    width: 65%;
+                }
+                .list {
+                    width: 35%;
+                    .uli {
+                        padding: 2px 5px 2px 0;
+                        &:first-child {
+                            font-weight: bold;
+                        }
+                    }
+                }
+            }
         }
     }
 }
