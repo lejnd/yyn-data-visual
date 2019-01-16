@@ -1,6 +1,6 @@
 <template>
 <div class="area-data">
-    <search-bar ref="searchBar" @getQuery="request"></search-bar>
+    <search-bar ref="searchBar" hasType @getQuery="request"></search-bar>
     <div class="content-box">
         <h3 class="box-title">投诉趋势</h3>
         <div class="trend_line" id="trend_line"></div>
@@ -10,7 +10,7 @@
             <div class="state-box">
                 <h3 class="box-title">区域投诉数据</h3>
                 <div class="state">
-                    <div class="item" v-for="item in complainStates" :key="item.name">
+                    <div class="item" v-for="item in complainStates" :key="item.name" @click="gotoAreaList(item.url)">
                         <div class="text">
                             <p>{{item.name}}</p>
                             <p><strong>{{item.value}}</strong>起</p>
@@ -34,7 +34,7 @@
     </div>
     <div class="content-box">
         <h3 class="box-title">平均响应时长
-            <RadioGroup v-model="department" style="margin-left:20px">
+            <RadioGroup v-model="department" style="margin-left:20px" @on-change="getResTime(queryCopy)">
                 <Radio label="1">指挥中心</Radio>
                 <Radio label="2">横行部门</Radio>
                 <Radio label="3">企业</Radio>
@@ -43,14 +43,24 @@
         <div class="flex-box">
             <div class="bar-box">
                 <div class="deco">
-                    <span><Icon type="ios-time" />十分钟内响应：541起</span>
-                    <span><Icon type="ios-time" />二十分钟内响应：541起</span>
-                    <span><Icon type="ios-time" />二十分钟内未响应：541起</span>
+                    <span><i>• </i>十分钟内响应：{{resDeco.tenRes}}起</span>
+                    <span><i>• </i>二十分钟内响应：{{resDeco.twentyRes}}起</span>
+                    <span><i>• </i>二十分钟内未响应：{{resDeco.twentyNoRes}}起</span>
                 </div>
-                <div class="sign"></div>
+                <div class="sign">{{region}}-{{classify}} {{date}}</div>
                 <div class="bar-chart" id="res_time"></div>
             </div>
-            <div class="table-box"></div>
+            <div class="table-box">
+                <Table
+                highlight-row
+                stripe
+                @on-current-change="gotoResTimeList"
+                :columns="colResTime"
+                :data="tableResTime"
+                size="small"
+                style="width:100%">
+                </Table>
+            </div>
         </div>
     </div>
     <div class="content-box">
@@ -64,6 +74,7 @@
                 <Table
                 highlight-row
                 stripe
+                @on-current-change="gotoCloseTimeList"
                 :columns="colDoneTime"
                 :data="tableDoneTime"
                 size="small"
@@ -83,6 +94,7 @@
                 <Table
                 highlight-row
                 stripe
+                @on-current-change="gotoCloseRateList"
                 :columns="colRate"
                 :data="tableRate"
                 size="small"
@@ -92,7 +104,7 @@
         </div>
     </div>
     <div class="flex-box">
-        <div class="one-third">
+        <div class="one-third" @click="gotoAccList()">
             <h3 class="box-title">账号开通数</h3>
             <div class="deco" v-if="account">
                 <div class="gov">政府账号<strong>{{account.gov}}</strong></div>
@@ -117,7 +129,7 @@
             <div class="radar">
                 <div class="bar-chart" id="object_type"></div>
                 <div class="list">
-                    <div class="uli" v-for="item in objectTypes" :key="item.name">
+                    <div class="uli" v-for="item in objectTypes" :key="item.name" @click="gotoClassifyList(item.id)">
                         {{item.name}}:<span>{{item.value}}</span>
                     </div>
                 </div>
@@ -136,7 +148,6 @@ export default {
     components: { SearchBar },
     data() {
         return {
-            department: '1',
             colRegion: [{
                 type: 'index',
                 width: 60,
@@ -154,6 +165,25 @@ export default {
                 align: 'center',
                 key: 'ratio',
                 title: '投诉占比'
+            }],
+            colResTime: [{
+                type: 'index',
+                width: 60,
+                align: 'center',
+                title: '排序'
+            }, {
+                align: 'center',
+                key: 'name',
+                title: '地域分布'
+            }, {
+                align: 'center',
+                key: 'time',
+                width: 140,
+                title: '平均响应时长'
+            }, {
+                align: 'center',
+                key: 'value',
+                title: '投诉量'
             }],
             colDoneTime: [{
                 type: 'index',
@@ -196,8 +226,9 @@ export default {
                 key: 'overtime',
                 title: '超时量'
             }],
-            statisticalTypes: ['thread', 'region', '', 'complete', 'completeRate', 'account', 'evaluation', 'objectType'],
+            statisticalTypes: ['thread', 'region', 'response', 'complete', 'completeRate', 'account', 'evaluation', 'objectType'],
             tableRegion: [],
+            tableResTime: [],
             tableDoneTime: [],
             tableRate: [],
             state: null,
@@ -205,9 +236,12 @@ export default {
             classify: '',
             date: '',
             account: null,
+            department: '1',
             assessType: '0',
             objectTypes: [],
             queryCopy: {},
+            resDeco: {},
+            myChart: null
         }
     },
     computed: {
@@ -215,13 +249,13 @@ export default {
             let state = this.state;
             if (this.state) {
                 return [
-                    { name: '投诉总量', value: state.total },
-                    { name: '拆单件数', value: state.opened },
-                    { name: '游客撤销', value: state.revoke },
-                    { name: '不予受理', value: state.refuse },
-                    { name: '正常办结', value: state.normal },
-                    { name: '超时办结', value: state.overtime },
-                    { name: '处理中', value: state.handling }
+                    { name: '投诉总量', value: state.total, url: 'dataDisplayList?method=initAreaList' },
+                    { name: '拆单件数', value: state.opened, url: 'dataDisplayList?method=initAreaList&typeItem=split' },
+                    { name: '游客撤销', value: state.revoke, url: 'dataDisplayList?method=initAreaList&typeItem=revocation' },
+                    { name: '不予受理', value: state.refuse, url: 'dataDisplayList?method=initAreaList&typeItem=notaccept' },
+                    { name: '正常办结', value: state.normal, url: 'dataDisplayList?method=initAreaList&typeItem=nomalComplete' },
+                    { name: '超时办结', value: state.overtime, url: 'dataDisplayList?method=initAreaList&typeItem=timeoutComplete' },
+                    { name: '处理中', value: state.handling, url: 'dataDisplayList?method=initAreaList&typeItem=notcomplete' }
                 ]
             } else {
                 return []
@@ -232,6 +266,7 @@ export default {
         request(query) {
             this.getTrend(query)
             .then(() => this.getRegion(query))
+            .then(() => this.getResTime(query))
             .then(() => this.getDoneTime(query))
             .then(() => this.getDoneRate(query))
             .then(() => this.getAccount(query))
@@ -239,8 +274,8 @@ export default {
             .then(() => this.getObjectType(query))
         },
         getList(query, statisticalType) {
-            const searchBar = this.$refs.searchBar || {};
-            searchBar.searchLoading();
+            const searchBar = this.$refs.searchBar;
+            if(searchBar) searchBar.searchLoading();
             const data = Object.assign({}, query, {
                 userid: userid,
                 statisticalType: statisticalType,
@@ -252,7 +287,7 @@ export default {
             this.queryCopy = data;
             return this.$fly.post('/dataVisualization/display', { data: data })
             .then((res) => {
-                searchBar.searchLoading();
+                if(searchBar) searchBar.searchLoading();
                 let data = res.data;
                 if (data && data !== '') {
                     return Promise.resolve(data)
@@ -261,9 +296,9 @@ export default {
                 }
             })
             .catch((err) => {
-                searchBar.searchLoading();
+                if(searchBar) searchBar.searchLoading();
                 this.$Message.warning(err ? err.msg || err : '请求失败');
-                return Promise.resolve();
+                return Promise.resolve(err);
             })
         },
         // 请求投诉趋势
@@ -282,6 +317,26 @@ export default {
                 this.initMap(data.list)
             })
         },
+        // 请求平均响应时长
+        getResTime(query) {
+            query = Object.assign({}, query, { department: this.department })
+            return this.getList(query, this.statisticalTypes[2])
+            .then((data) => {
+                this.tableResTime = data.list.map((item) => Object.assign({}, item, {
+                    time: `${item.resMin}分钟`
+                }));
+                this.region = data.region;
+                this.classify = data.classify;
+                this.date = data.date;
+                this.resDeco = {
+                    tenRes: data.tenRes,
+                    twentyRes: data.twentyRes,
+                    twentyNoRes: data.twentyNoRes
+                }
+                let list = data.list.map((item) => item.name == '西双版纳' ? Object.assign({}, item, { name: '版纳' }) : item);
+                this.initBar('res_time', '平均响应时长', list)
+            })
+        },
         // 请求平均办结时长
         getDoneTime(query) {
             return this.getList(query, this.statisticalTypes[3])
@@ -289,12 +344,8 @@ export default {
                 this.tableDoneTime = data.list.map((item) => Object.assign({}, item, {
                     time: `${item.doneMin}分钟`
                 }));
-                this.region = data.region;
-                this.classify = data.classify;
-                this.date = data.date;
-                let name = '平均办结时长';
                 let list = data.list.map((item) => item.name == '西双版纳' ? Object.assign({}, item, { name: '版纳' }) : item);
-                this.initBar(list)
+                this.initBar('done_time', '平均办结时长', list)
             })
         },
         // 请求24小时办结率
@@ -302,7 +353,6 @@ export default {
             return this.getList(query, this.statisticalTypes[4])
             .then((data) => {
                 this.tableRate = data.list;
-                let name = '24小时办结率';
                 let list = data.list.map((item) => item.name == '西双版纳' ? Object.assign({}, item, { name: '版纳' }) : item);
                 this.initRateBar(list)
             })
@@ -348,9 +398,8 @@ export default {
             this.initChart(id, option);
         },
         // 初始化时间柱状体
-        initBar(list) {
-            const id = 'done_time';
-            const option = chartOption.timeBar(list)
+        initBar(id, name, list) {
+            const option = chartOption.timeBar(name, list)
             this.initChart(id, option);
         },
         // 初始化比率柱状体
@@ -368,6 +417,8 @@ export default {
         // 初始化游客评价饼图
         initAssessPie(list) {
             const id = 'assess_pie';
+            const echarts = this.$echarts;
+            this.myChart = echarts.init(document.getElementById(id));
             const width = this.$refs.assess_pie.clientWidth;
             let redis = ['20%', '40%'];
             if (width > 420) {
@@ -378,13 +429,16 @@ export default {
                 redis = ['10%', '25%']
             }
             const option = chartOption.assessPie(list, redis)
-            this.initChart(id, option);
+            this.myChart.setOption(option)
+            this.myChart.on('click', function(params) {
+                const url = params.data.url
+                window.location.href = url
+            })
         },
         // 初始化游客评价饼图
         initRadar(data) {
             const id = 'object_type';
             const width = this.$refs.assess_pie.clientWidth;
-            console.log(width);
             let redis = 80
             if (width < 355 && width >= 305) {
                 redis = 50
@@ -396,14 +450,49 @@ export default {
             const option = chartOption.radar(data, redis)
             this.initChart(id, option);
         },
-        initChart(id = '', option = {}) {
-            let echarts = this.$echarts;
-            let myChart = echarts.init(document.getElementById(id));
-            myChart.setOption(option)
+        initChart(id = null, option = {}) {
+            const echarts = this.$echarts;
+            const dom = document.getElementById(id)
+            this.myChart = echarts.init(dom)
+            this.myChart.setOption(option)
+        },
+        // 区域投诉数据跳转
+        gotoAreaList(url) {
+            window.location.href = url;
+        },
+        // 平均办结时长跳转
+        gotoResTimeList(row) {
+            const id = row.areaId;
+            window.location.href = `dataDisplayList?method=initResponseList&areaId=${id}`
+        },
+        // 平均办结时长跳转
+        gotoCloseTimeList(row) {
+            const id = row.areaId;
+            window.location.href = `dataDisplayList?method=initCloseTimeList&areaId=${id}`
+        },
+        // 24小时办结率跳转
+        gotoCloseRateList(row) {
+            const id = row.areaId;
+            window.location.href = `dataDisplayList?method=initCloseRateList&areaId=${id}`
+        },
+        // 账号开通数跳转
+        gotoAccList() {
+            window.location.href = 'dataDisplayList?method=initAccountList'
+        },
+        // 投诉对象分类跳转
+        gotoClassifyList(id) {
+            if (!id) return null;
+            window.location.href = `dataDisplayList?method=initClassifyList&id=${id}`
         }
     },
     mounted () {
         this.$refs.searchBar.onSubmit();
+        const dom = document.body.offsetHeight
+        console.log(dom);
+        
+    },
+    destroyed () {
+        if(this.myChart) this.myChart.dispose()
     }
 }
 </script>
@@ -411,11 +500,7 @@ export default {
 <style lang="less">
 .area-data {
     padding: 15px;
-    min-width: 1000px;
-    overflow: scroll;
-    ul {
-        
-    }
+    // min-width: 1000px;
     .box-title {
         width: 100%;
         margin-bottom: 20px;
@@ -442,6 +527,7 @@ export default {
                 flex-wrap: wrap;
                 // background-color: aquamarine;
                 .item {
+                    cursor: pointer;
                     border: 1px solid #eee;
                     width: 48%;
                     padding: 10px;
@@ -467,6 +553,14 @@ export default {
         }
         .bar-box {
             width: 64%;
+            .deco {
+                margin-bottom: 15px;
+                text-align: center;
+                color: #000;
+                span {
+                    padding-right: 20px;
+                }
+            }
             .sign {
                 text-align: center;
                 color: #808080;
@@ -478,6 +572,7 @@ export default {
         .table-box {
             width: 34%;
             td {
+                cursor: pointer;
                 height: 25px;
             }
             .ivu-table-cell {
@@ -498,6 +593,7 @@ export default {
                     // width: 30%;
                     vertical-align: middle;
                     strong {
+                        cursor: pointer;
                         font-size: 22px;
                         padding: 0 6px;
                         font-weight: 400;
@@ -528,7 +624,8 @@ export default {
                 .list {
                     width: 35%;
                     .uli {
-                        padding: 2px 5px 2px 0;
+                        cursor: pointer;
+                        padding: 3px 0 4px 15px;
                         &:first-child {
                             font-weight: bold;
                         }

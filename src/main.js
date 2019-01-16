@@ -9,12 +9,15 @@ import iView from 'iview';
 import 'iview/dist/styles/iview.css';
 
 import echarts from 'echarts';
-// import $ from 'jquery';
 import fly from 'flyio';
 
 const debug = process.env.NODE_ENV !== 'production'
 
 Vue.config.productionTip = false;
+
+router.beforeEach((to, from, next) => {
+    next();
+})
 
 fly.config = {
   headers: {

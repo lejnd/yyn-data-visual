@@ -4,7 +4,7 @@
     <date-range ref="dateRange" @getDate="setDate"></date-range>
     <Row :gutter="20">
         <Col span="4">
-            <Select v-model="city" style="width: 100%" placeholder="州市" @on-change="setChildCityList()">
+            <Select v-model="city" style="width: 100%" :disabled="disCity" placeholder="州市" @on-change="setChildCityList()">
                 <Option
                 v-for="item in cityList"
                 :value="item.value"
@@ -14,7 +14,7 @@
             </Select>
         </Col>
         <Col span="4">
-            <Select v-model="childCity" style="width: 100%" placeholder="区县">
+            <Select v-model="childCity" :disabled="disCounty" style="width: 100%" placeholder="区县">
                 <Option
                 v-for="item in childCityList"
                 :value="item.value"
@@ -23,12 +23,22 @@
                 </Option>
             </Select>
         </Col>
+        <Col span="4" v-if="hasType">
+            <Select v-model="type" style="width: 100%" placeholder="所有分类">
+                <Option
+                v-for="item in typeList"
+                :value="item.id"
+                :key="item.id">
+                {{ item.name }}
+                </Option>
+            </Select>
+        </Col>
         <Col span="6">
             <Button type="primary" @click="onClear" ghost style="margin-right:20px">清空</Button>
             <Button type="primary" @click="onSubmit" :loading="loading">查询</Button>
         </Col>
         <div style="float:right">
-            <Button type="primary" @click="onSubmit" style="margin-right:20px">导出</Button>
+            <!-- <Button type="primary" @click="onSubmit" style="margin-right:20px">导出</Button> -->
             <Button type="primary" @click="onPrint">打印</Button>
         </div>
     </Row>
@@ -44,17 +54,25 @@ export default {
     props: {
         title: {
             type: String,
-            default: ()=>null 
+            default: () => null 
+        },
+        hasType: {
+            type: Boolean,
+            default: () => false
         }
     },
     data() {
         return {
             cityList: null,
             childCityList: null,
-            city: null,
-            childCity: null,
+            city: pid,
+            childCity: cid,
             date: null,
+            typeList: null,
+            type: null,
             loading: false,
+            disCity: false,   // 州市只读
+            disCounty: false,   // 区县只读
         }
     },
     methods: {
@@ -68,15 +86,19 @@ export default {
             let query = {
                 city: this.city,
                 county: this.childCity,
-                date: this.date || []
+                date: this.date || [],
+                type: this.type
             }
             this.$emit('getQuery', query)
         },
         onClear() {
-            this.city = null;
-            this.childCity = null;
-            this.date = null;
-            this.$refs.dateRange.clearValueYQM();
+            if (!this.loading) {
+                this.city = pid || null;
+                this.childCity = cid || null;
+                this.date = null;
+                this.$refs.dateRange.clearValueYQM();
+                this.onSubmit()
+            }
         },
         onPrint() {
             window.print();
@@ -86,6 +108,12 @@ export default {
         },
         searchLoading() {
             this.loading = !this.loading;
+        },
+        getTypeList() {
+            this.$fly.get('/dataVisualization/classify')
+            .then((res) => {
+                this.typeList = res.data.list
+            })
         },
         getRegion(pid) {
             return this.$fly.post('/dataVisualization/regionalism', {
@@ -116,7 +144,7 @@ export default {
         },
         setChildCityList() {
             if (this.city) {
-                this.getRegion(this.city).then((res) => {
+                return this.getRegion(this.city).then((res) => {
                     if (res && res.length > 0) {
                         this.childCityList = res.map((data) => {
                             return {
@@ -131,13 +159,21 @@ export default {
     },
     mounted () {
         this.setCityList();
+        this.getTypeList();
+        if (pid) {
+            this.setChildCityList()
+            this.disCity = true
+        }
+        if (cid) {
+            this.disCounty = true
+        }
     }
 }
 </script>
 
 <style lang="less">
     .search-bar {
-        padding: 20px 30px;
+        padding: 20px 10px;
         .title {
             font-size: 16px;
             height: 20px;

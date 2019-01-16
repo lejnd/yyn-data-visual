@@ -13,7 +13,10 @@ const line = function(xAxis, series) {
                 lineStyle: { type: 'dashed' }
             }
         },
-        tooltip: { trigger: 'axis' },
+        tooltip: {
+            trigger: 'axis',
+            formatter: '{b}：{c}起'
+        },
         grid: {
             left: '20',
             top: '30',
@@ -38,7 +41,12 @@ const map = function(data) {
     return {
         tooltip: {
             trigger: 'item',
-            formatter: '{b}<br/>投诉量：{c}起'
+            // formatter: '{b}<br/>投诉量：{c}起'
+            formatter: function(params) {
+                if(params.value) {
+                    return `${params.name}<br>投诉量：${params.value}起`
+                }
+            }
         },
         visualMap: {
             left: 'right',
@@ -91,7 +99,7 @@ const map = function(data) {
     }
 }
 
-const timeBar = function(list) {
+const timeBar = function(name, list) {
     let option = {
         tooltip: {
             trigger: 'item',
@@ -121,7 +129,7 @@ const timeBar = function(list) {
             }
         },
         legend: {
-            data: ['平均办结时长', '投诉量'],
+            data: [name, '投诉量'],
             bottom: 1,
         },
         grid: {
@@ -136,7 +144,7 @@ const timeBar = function(list) {
             data: list ? list.map((item) => item.name) : [],
             axisLabel: {
                 interval: 0,
-                // rotate:40
+                rotate:40
             }
         },
         yAxis: {
@@ -149,8 +157,8 @@ const timeBar = function(list) {
             }
         },
         series: [{
-            name: '平均办结时长',
-            data: list ? list.map((item) => `${item.doneMin}`) : [],
+            name: name,
+            data: list ? list.map((item) => item.doneMin || item.resMin) : [],
             type: 'bar',
             barWidth: 15,
             itemStyle: {
@@ -158,7 +166,7 @@ const timeBar = function(list) {
             },
             markLine: {
                 data: [
-                    {type: 'average', name: '全省平均值'}
+                    {type: 'average', name: '平均值'}
                 ],
                 label: {
                     formatter: '{b}'
@@ -204,7 +212,7 @@ const rateBar = function(list) {
                     //         break;
                     // }
                     return `地区：${params.name}<br/>
-                    ${params.seriesName}：${params.value}分钟<br/>
+                    ${params.seriesName}：${params.value}%<br/>
                     投诉量：${obj.value}`
                 }
             }
@@ -225,7 +233,7 @@ const rateBar = function(list) {
             data: list ? list.map((item) => item.name) : [],
             axisLabel: {
                 interval: 0,
-                // rotate:40
+                rotate:40
             }
         },
         yAxis: {
@@ -243,11 +251,11 @@ const rateBar = function(list) {
             type: 'bar',
             barWidth: 15,
             itemStyle: {
-                color: '#0D6BE3'
+                color: '#338BFF'
             },
             markLine: {
                 data: [
-                    {type: 'average', name: '全省平均值'}
+                    {type: 'average', name: '平均值'}
                 ],
                 label: {
                     formatter: '{b}'
@@ -324,7 +332,10 @@ const accountBar = function(list) {
 }
 
 const assessPie = function(list, redis) {
-    const data = list ? list.map(item => Object.assign({}, item, { name: item.name.replace('（','(').replace('）',')') })) : [];
+    const data = list ? list.map(item => Object.assign({}, item, {
+        name: item.name.replace('（','(').replace('）',')'),
+        url: `dataDisplayList?method=initEvaluationList&level=${item.name[0]}`
+    })) : [];
     const option = {
         tooltip: {
             trigger: 'item',
@@ -359,9 +370,10 @@ const assessPie = function(list, redis) {
                                 alien:'center'
                             },
                             per: {
-                                color: '#000000',
+                                // color: '#000000',
                                 align: 'center',
                                 fontSize: 13,
+                                fontWeight: 600,
                             }
                         }
                     }

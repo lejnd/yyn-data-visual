@@ -4,6 +4,8 @@ import Home from './views/home.vue'
 
 import TravelMode from './views/travelMode.vue'
 import AreaData from './views/areaData.vue';
+import Source from './views/source.vue';
+import ObjectType from './views/objectType.vue';
 
 Vue.use(Router)
 
@@ -27,12 +29,22 @@ export default new Router({
       component: AreaData
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (about.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      // component: () => import(/* webpackChunkName: "about" */ './views/About.vue')
-    }
+      path: '/source',
+      name: 'Source',
+      component: Source
+    },
+    {
+      path: '/object_type',
+      name: 'ObjectType',
+      component: ObjectType
+    },
+    // {
+    //   path: '/about',
+    //   name: 'about',
+    //   // route level code-splitting
+    //   // this generates a separate chunk (about.[hash].js) for this route
+    //   // which is lazy-loaded when the route is visited.
+    //   component: () => import(/* webpackChunkName: "about" */ './views/About.vue')
+    // }
   ]
 })

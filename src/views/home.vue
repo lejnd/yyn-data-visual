@@ -7,6 +7,12 @@
         <router-link to="/area_data">数据可视化: 投诉区域分析</router-link>
     </div>
     <div class="block">
+        <router-link to="/source">数据可视化: 投诉来源分析</router-link>
+    </div>
+    <div class="block">
+        <router-link to="/object_type">数据可视化: 投诉对象分析</router-link>
+    </div>
+    <div class="block">
         <Button type="primary" @click="goto()">跳转WAU列表测试</Button>
     </div>
 </div>
@@ -34,7 +40,8 @@ export default {
 <style lang="less">
 .home {
     .block {
-        margin: 10px auto;
+        margin: 20px auto;
+        text-align: center;
     }
 }
 </style>
