@@ -21,7 +21,12 @@
             </div>
             <div class="yn_map" id="yn_map"></div>
             <div class="table-box">
+                <RadioGroup v-model="areaChild" style="margin-bottom:10px" @on-change="getChildList(queryCopy, statisticalTypes[1])">
+                    <Radio label="1">州市</Radio>
+                    <Radio label="2">区县</Radio>
+                </RadioGroup>
                 <Table
+                v-if="areaChild == '1'"
                 highlight-row
                 stripe
                 :columns="colRegion"
@@ -29,19 +34,32 @@
                 size="small"
                 style="width:100%">
                 </Table>
+                <div v-if="areaChild == '2'">
+                    <Table
+                    highlight-row
+                    stripe
+                    :columns="colRegion"
+                    :data="areaChildList"
+                    size="small"
+                    style="width:100%">
+                    </Table>
+                    <div class="page">
+                        <Page :total="500" size="small" prev-text="前页" next-text="后页" @on-change="pageChange(page, statisticalTypes[1])" />
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <div class="content-box">
-        <h3 class="box-title">平均响应时长
-            <RadioGroup v-model="department" style="margin-left:20px" @on-change="getResTime(queryCopy)">
-                <Radio label="1">指挥中心</Radio>
-                <Radio label="2">横行部门</Radio>
-                <Radio label="3">企业</Radio>
-            </RadioGroup>
-        </h3>
         <div class="flex-box">
             <div class="bar-box">
+                <h3 class="box-title">平均响应时长
+                    <RadioGroup v-model="department" style="margin-left:20px" @on-change="getResTime(queryCopy)">
+                        <Radio label="1">指挥中心</Radio>
+                        <Radio label="2">横行部门</Radio>
+                        <Radio label="3">企业</Radio>
+                    </RadioGroup>
+                </h3>
                 <div class="deco">
                     <span><i>• </i>十分钟内响应：{{resDeco.tenRes}}起</span>
                     <span><i>• </i>二十分钟内响应：{{resDeco.twentyRes}}起</span>
@@ -51,6 +69,10 @@
                 <div class="bar-chart" id="res_time"></div>
             </div>
             <div class="table-box">
+                <RadioGroup v-model="resChild" style="margin-bottom:10px" @on-change="getChildList(queryCopy)">
+                    <Radio label="1">州市</Radio>
+                    <Radio label="2">区县</Radio>
+                </RadioGroup>
                 <Table
                 highlight-row
                 stripe
@@ -166,6 +188,8 @@ export default {
                 key: 'ratio',
                 title: '投诉占比'
             }],
+            areaChild: '1',
+            areaChildList: [],
             colResTime: [{
                 type: 'index',
                 width: 60,
@@ -185,6 +209,8 @@ export default {
                 key: 'value',
                 title: '投诉量'
             }],
+            resChild: '1',
+            resChildList: [],
             colDoneTime: [{
                 type: 'index',
                 width: 60,
@@ -264,6 +290,8 @@ export default {
     },
     methods: {
         request(query) {
+            this.areaChild = '1';
+            this.resChild = '1';
             this.getTrend(query)
             .then(() => this.getRegion(query))
             .then(() => this.getResTime(query))
@@ -383,6 +411,15 @@ export default {
                     ...data.list
                 ]
             })
+        },
+        // 请求各模块区县列表
+        getChildList(query) {
+            console.log(query);
+            
+        },
+        pageChange(e) {
+            console.log(e);
+            
         },
         // 初始化投诉趋势图
         initTrendLine(xAxis, series) {
@@ -568,6 +605,11 @@ export default {
         }
         .table-box {
             width: 34%;
+            .page {
+                padding: 5px 0;
+                text-align: right;
+                min-width: 338px;
+            }
             td {
                 cursor: pointer;
                 height: 25px;
