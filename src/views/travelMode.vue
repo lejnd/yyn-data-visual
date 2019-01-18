@@ -145,9 +145,9 @@ export default {
         }
     },
     mounted() {
-        console.log('userid:', userid);
+        // console.log('userid:', userid);
         // this.getList({});
-        this.$refs.searchBar.onSubmit();
+        this.$refs.searchBar.onSubmit(); 
     }
 }
 </script>

@@ -65,6 +65,7 @@ export default {
             }, {
                 align: 'center',
                 key: 'name',
+                width: 105,
                 title: '投诉分类'
             }, {
                 align: 'center',
@@ -78,6 +79,7 @@ export default {
                 align: 'center',
                 key: 'rate',
                 title: '环比',
+                // width: 165,
                 slot: 'rate'
             }],
             valueData: [],
@@ -300,6 +302,9 @@ export default {
                 width: 40%;
                 td {
                     height: 25px;
+                }
+                .ivu-table-cell {
+                    padding: 0;
                 }
                 .rateRise {
                     color: #D42C26;

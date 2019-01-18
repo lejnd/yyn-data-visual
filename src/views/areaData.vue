@@ -487,9 +487,6 @@ export default {
     },
     mounted () {
         this.$refs.searchBar.onSubmit();
-        const dom = document.body.offsetHeight
-        console.log(dom);
-        
     },
     destroyed () {
         if(this.myChart) this.myChart.dispose()
