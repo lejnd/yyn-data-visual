@@ -12,7 +12,7 @@ console.log('本地启动或构建的文件信息 | 结束----------------------
 console.log('')
  
 module.exports = {
-  baseUrl: './',
+  baseUrl: '../static/chart',
   devServer: {
     proxy: {
       '/api': {

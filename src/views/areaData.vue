@@ -21,7 +21,7 @@
             </div>
             <div class="yn_map" id="yn_map"></div>
             <div class="table-box">
-                <RadioGroup v-model="areaChild" style="margin-bottom:10px" @on-change="getChildList(queryCopy, statisticalTypes[1])">
+                <RadioGroup v-model="areaChild" style="margin-bottom:10px" @on-change="getChildList(statisticalTypes[1], areaChild)">
                     <Radio label="1">州市</Radio>
                     <Radio label="2">区县</Radio>
                 </RadioGroup>
@@ -44,7 +44,7 @@
                     style="width:100%">
                     </Table>
                     <div class="page">
-                        <Page :total="500" size="small" prev-text="前页" next-text="后页" @on-change="pageChange(page, statisticalTypes[1])" />
+                        <Page :total="500" size="small" prev-text="前页" next-text="后页" @on-change="pageChange(page)" />
                     </div>
                 </div>
             </div>
@@ -413,12 +413,13 @@ export default {
             })
         },
         // 请求各模块区县列表
-        getChildList(query) {
-            console.log(query);
+        getChildList(page, query, str, index) {
+            if (index == '1') return;
+            console.log(page, query, str);
             
         },
-        pageChange(e) {
-            console.log(e);
+        pageChange(page) {
+            this.getChildList()
             
         },
         // 初始化投诉趋势图
