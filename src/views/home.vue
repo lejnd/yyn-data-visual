@@ -1,6 +1,6 @@
 <template>
 <div class="home">
-    <!-- <div class="block">
+    <div class="block">
         <router-link to="/travel_mode">数据可视化: 投诉人旅游方式</router-link>
     </div>
     <div class="block">
@@ -14,10 +14,6 @@
     </div>
     <div class="block">
         <Button type="primary" @click="goto()">跳转WAU列表测试</Button>
-    </div> -->
-
-    <div class="block">
-        <router-link to="/agency_desk">导旅: 旅行社管理工作台</router-link>
     </div>
 </div>
 </template>
