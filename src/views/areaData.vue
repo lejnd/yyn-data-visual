@@ -250,7 +250,7 @@ export default {
             if (this.state) {
                 return [
                     { name: '投诉总量', value: state.total, url: 'dataDisplayList?method=initAreaList' },
-                    { name: '拆单件数', value: state.opened, url: 'dataDisplayList?method=initAreaList&typeItem=split' },
+                    // { name: '拆单件数', value: state.opened, url: 'dataDisplayList?method=initAreaList&typeItem=split' },
                     { name: '游客撤销', value: state.revoke, url: 'dataDisplayList?method=initAreaList&typeItem=revocation' },
                     { name: '不予受理', value: state.refuse, url: 'dataDisplayList?method=initAreaList&typeItem=notaccept' },
                     { name: '正常办结', value: state.normal, url: 'dataDisplayList?method=initAreaList&typeItem=nomalComplete' },
