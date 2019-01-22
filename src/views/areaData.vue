@@ -110,7 +110,7 @@
                 <div class="gov">政府账号<strong>{{account.gov}}</strong></div>
                 <div class="acc-tree">
                     <span>• 指挥中心：{{account.center}}（{{account.centerRate}}）</span>
-                    <span>• 横向企业：{{account.department}}（{{account.departmentRate}}）</span>
+                    <span>• 横向部门：{{account.department}}（{{account.departmentRate}}）</span>
                 </div>
             </div>
             <div class="bar-chart" id="account"></div>
