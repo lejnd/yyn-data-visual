@@ -1,11 +1,12 @@
 <template>
 <div class="search-bar">
-    <div class="header">
+    <div class="header" v-if="parent">
         <Breadcrumb>
-            <BreadcrumbItem to="">{{name}}</BreadcrumbItem>
+            <BreadcrumbItem to="">{{parent}}</BreadcrumbItem>
             <BreadcrumbItem>工作台</BreadcrumbItem>
         </Breadcrumb>
     </div>
+    <div class="title" v-if="title">{{title}}</div>
     <Form class="search-form" ref="form" :model="form" inline>
         <FormItem label="行政区划" :label-width="80" style="width:200px" prop="city">
             <Select v-model="form.city" placeholder="州市" @on-change="setChildCityList()">
@@ -27,7 +28,7 @@
                 </Option>
             </Select>
         </FormItem>
-        <FormItem label="等级" :label-width="50" style="width:150px" prop="level">
+        <FormItem label="等级" :label-width="50" style="width:150px" prop="level" v-if="parent">
             <Select v-model="form.level" placeholder="等级">
                 <Option
                 v-for="item in levelOption"
@@ -58,9 +59,13 @@
 export default {
     name: 'SearchBar',
     props: {
-        name: {
+        parent: {
             type: String,
-            default: () => ''
+            default: () => null
+        },
+        title: {
+            type: String,
+            default: () => null
         }
     },
     data() {
@@ -112,9 +117,17 @@ export default {
         line-height: 40px;
         padding: 0 20px;
         border-bottom: 1px solid #eee;
+        margin-bottom: 15px;
+    }
+    .title {
+        padding: 6px 20px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #515a6e;
+        margin-bottom: 10px;
     }
     .search-form {
-        margin: 15px;
+        margin: 0 15px;
         // border-bottom: 1px solid #eee;
     }
     .ivu-select-selection, input, button {

@@ -61,6 +61,82 @@ const map = function(data) {
     }
 }
 
+const bar = function(list) {
+    let option = {
+        tooltip: {
+            trigger: 'item',
+            formatter: function(params) {
+                if (!list) return '';
+                const arr = list.filter(item => item.name == params.name)
+                const obj = arr[0] || {};
+                if (params.componentType == 'markLine') {
+                    const data = params.data;
+                    return `${params.name}<br/>
+                    ${data.value}%`
+                } else {
+                    // switch (params.seriesIndex) {
+                    //     case 0:
+                    //         return `地区：${params.name}<br/>
+                    //         ${params.seriesName}：${params.value}%<br/>`
+                    //     case 1:
+                    //         return `地区：${params.name}<br/>
+                    //         ${params.seriesName}：${params.value}<br/>`
+                    //     default:
+                    //         break;
+                    // }
+                    return `地区：${params.name}<br/>
+                    ${params.seriesName}：${params.value}%<br/>
+                    投诉量：${obj.value}`
+                }
+            }
+        },
+        grid: {
+            left: 'left',
+            top: '30',
+            right: '66',
+            bottom: '40',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: list ? list.map((item) => item.name) : [],
+            axisLabel: {
+                interval: 0,
+                rotate:40
+            }
+        },
+        yAxis: {
+            type: 'value',
+            axisLine: { show: false },
+            axisTick: { show: false },
+            // axisLabel: { formatter: '{value}%' },
+            splitLine: {
+                lineStyle: { type: 'dashed' }
+            }
+        },
+        series: [{
+            name: '旅行社',
+            data: list ? list.map((item) => item.value) : [],
+            type: 'bar',
+            barWidth: 15,
+            itemStyle: {
+                color: '#338BFF'
+            },
+            markLine: {
+                data: [
+                    {type: 'average', name: '平均值'}
+                ],
+                label: {
+                    formatter: '{b}'
+                },
+                lineStyle: { type: 'solid' }
+            }
+        }]
+    };
+    return option;
+}
+
 export default {
     map,
+    bar,
 };

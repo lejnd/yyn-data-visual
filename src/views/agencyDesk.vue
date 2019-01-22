@@ -1,7 +1,7 @@
 <template>
 <div class="agency-desk">
-    <search-bar name="旅行社管理" @getQuery="request"></search-bar>
-    <div class="content-box">
+    <search-bar parent="旅行社管理" @getQuery="getChart"></search-bar>
+    <div class="chart-box">
         <div class="right">
             <div class="map-chart" id="map_chart"></div>
         </div>
@@ -9,6 +9,10 @@
             <div class="bar-chart" id="agency_rate"></div>
             <div class="bar-chart" id="agency_comp"></div>
         </div>
+    </div>
+    <search-bar title="违规旅行社重点监管名单" @getQuery="getList"></search-bar>
+    <div class="list-box">
+
     </div>
 </div>
 </template>
@@ -26,7 +30,11 @@ export default {
         }
     },
     methods: {
-        request(query) {
+        getChart(query) {
+            console.log(query);
+            
+        },
+        getList(query) {
             console.log(query);
             
         },
@@ -40,6 +48,11 @@ export default {
                 console.log(params);
             })
         },
+        initRateBar() {
+            const id = 'agency_rate';
+            const option = OP.bar();
+            this.initChart(id, option);
+        },
         initChart(id = null, option = {}) {
             const echarts = this.$echarts;
             const dom = document.getElementById(id)
@@ -49,17 +62,20 @@ export default {
     },
     mounted () {
         this.initMap()
+        this.initRateBar()
     }
 }
 </script>
 
 <style lang="less">
 .agency-desk {
-    .content-box {
+    .chart-box {
         padding: 0 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding: 10px 0;
+        // border-bottom: 1px solid #ddd;
         .right {
             width: 35%;
             .map-chart {
@@ -67,8 +83,21 @@ export default {
             }
         }
         .left {
-            width: 64%;
+            width: 63%;
+            display: flex;
+            flex-flow: column;
+            .bar-chart {
+                height: 300px;
+                width: 100%;
+            }
         }
+    }
+    .list-box {
+        border: 1px solid #eee;
+        padding: 10px;
+        margin: 0 20px;
+        margin-bottom: 40px;
+        min-height: 200px;
     }
 }
     
