@@ -20,7 +20,7 @@
                 style="width:100%">
                     <template slot-scope="{ row }" slot="rate">
                         <span class="rateRise" :class="{ rateFall: row.rate && row.rate[0] == '-' }">
-                            {{formRate(row.rate)}}<Icon type="md-arrow-down" v-if="row.rate && row.rate[0] == '-'" /><Icon type="md-arrow-up" v-else />
+                            {{formRate(row.rate)}}<Icon type="md-arrow-down" v-if="row.rate && row.rate[0] == '-' && formRate(row.rate) != '-'" /><Icon type="md-arrow-up" v-else-if="formRate(row.rate) != '-'" />
                         </span>
                     </template>
                 </Table>
@@ -263,7 +263,7 @@ export default {
         },
         formRate(str) {
             if (str && str[0] == '-') {
-                return str.substring(1)
+                return str.substring(1) && str.substring(1) !== '' ? str.substring(1) : '-'
             } else {
                 return str
             }
