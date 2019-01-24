@@ -323,7 +323,7 @@ export default {
             return this.getList(query, this.statisticalTypes[2])
             .then((data) => {
                 this.tableResTime = data.list.map((item) => Object.assign({}, item, {
-                    time: `${item.resMin}分钟`
+                    time: chartOption.formMin(item.resMin)
                 }));
                 this.region = data.region;
                 this.classify = data.classify;
@@ -342,7 +342,7 @@ export default {
             return this.getList(query, this.statisticalTypes[3])
             .then((data) => {
                 this.tableDoneTime = data.list.map((item) => Object.assign({}, item, {
-                    time: `${item.doneMin}分钟`
+                    time: chartOption.formMin(item.doneMin)
                 }));
                 let list = data.list.map((item) => item.name == '西双版纳' ? Object.assign({}, item, { name: '版纳' }) : item);
                 this.initBar('done_time', '平均办结时长', list)

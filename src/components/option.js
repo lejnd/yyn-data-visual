@@ -110,7 +110,7 @@ const timeBar = function(name, list) {
                 if (params.componentType == 'markLine') {
                     const data = params.data;
                     return `${params.name}<br/>
-                    ${parseInt(data.value)}分钟`
+                    ${formMin(parseInt(data.value))}`
                 } else {
                     // switch (params.seriesIndex) {
                     //     case 0:
@@ -123,7 +123,7 @@ const timeBar = function(name, list) {
                     //         break;
                     // }
                     return `地区：${params.name}<br/>
-                    ${params.seriesName}：${params.value}分钟<br/>
+                    ${params.seriesName}：${formMin(params.value)}<br/>
                     投诉量：${obj.value}`
                 }
             }
@@ -440,6 +440,34 @@ const radar = function(data, redis) {
     return option
 }
 
+const formSec = function(s) {
+    var t;
+    if(s > -1){
+        var day = Math.floor(s/(3600 * 24));
+        var hour = Math.floor(s/3600) % 24;
+        var min = Math.floor(s/60) % 60;
+        var sec = s % 60;
+        day == 0 ? t = '' : t = day + '天';
+        hour == 0 ? t = '' : t += hour + "时";
+        t += min + "分";
+        // t += sec + "秒";
+    }
+    return t;
+}
+
+const formMin = function(s) {
+    var t;
+    if(s > -1){
+        var day = Math.floor(s/(60 * 24));
+        var hour = Math.floor(s/60) % 24;
+        var min = s % 60;
+        day == 0 ? t = '' : t = day + '天';
+        hour == 0 ? t = '' : t += hour + "时";
+        t += min + "分";
+    }
+    return t;
+}
+
 export default {
     line,
     map,
@@ -447,5 +475,7 @@ export default {
     rateBar,
     accountBar,
     assessPie,
-    radar
+    radar,
+    formSec,
+    formMin
 };
