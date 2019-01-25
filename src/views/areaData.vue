@@ -424,9 +424,9 @@ export default {
             if (width > 420) {
                 redis = ['30%', '55%']
             } else if (width < 355 && width >= 305) {
-                redis = ['15%', '35%']
+                redis = ['13%', '33%']
             } else if (width < 305) {
-                redis = ['10%', '25%']
+                redis = ['8%', '23%']
             }
             const option = chartOption.assessPie(list, redis)
             this.myChart.setOption(option)
@@ -578,7 +578,7 @@ export default {
         }
         .one-third {
             padding: 15px;
-            width: 32%;
+            width: 33%;
             border: 1px solid #D8EDFD;
             .deco {
                 width: 100%;

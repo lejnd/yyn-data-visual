@@ -356,12 +356,15 @@ const assessPie = function(list, redis) {
                 hoverAnimation: false,
                 label: {
                     normal: {
-                        formatter: '{per|{c}起{d}%}\n{a|{b}}\n{hr|}',
+                        formatter: '{per|{c}起}\n{b|{d}%}\n{a|{b}}\n{hr|}',
                         rich: {
                             a: {
                                 color: '#999999',
                                 fontSize: 11,
-                                lineHeight: 20,
+                                align: 'center'
+                            },
+                            b: {
+                                fontSize: 11,
                                 align: 'center'
                             },
                             hr: {
