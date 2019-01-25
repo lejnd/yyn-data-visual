@@ -7,7 +7,7 @@ export default [
         data: {
             startDate: '',
             endDate: '',
-            region: '',
+            region: '',    // 拆为city和county
             level: ''
         }
     },
