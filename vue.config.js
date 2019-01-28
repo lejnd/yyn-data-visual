@@ -16,7 +16,8 @@ module.exports = {
   devServer: {
     proxy: {
       '/api': {
-        target: 'http://220.163.122.58:8081',
+        // target: 'http://220.163.122.58:8081',    // 投诉dev
+        target: 'http://123.207.86.139:19800',     // 导旅dev
         changOrigin: true,
         pathRewrite: {
             '^/api': ''

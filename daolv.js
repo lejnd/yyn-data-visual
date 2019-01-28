@@ -91,13 +91,17 @@ export default [
     {
         data: {
             // 按地区分布列表
-            areaList: [{
-                name: '昆明',    // 地区
-                code: '',       // 地区code
-                value: 324,   // 导游数量
-                ratio: '32.22%',   // 导游占比
-                average: 78,    // 导游打分平均分
-            }],
+            areaList: {
+                region: '',
+                total: 3434,
+                list: [{
+                    name: '昆明',    // 地区
+                    code: '',       // 地区code
+                    value: 324,   // 导游数量
+                    ratio: '32.22%',   // 导游占比
+                    average: 78,    // 导游打分平均分
+                }]
+            },
             // 按性别分布列表
             sexList: [{
                 name: '男',

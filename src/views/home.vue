@@ -19,6 +19,9 @@
     <div class="block">
         <router-link to="/agency_desk">导旅: 旅行社管理工作台</router-link>
     </div>
+    <div class="block">
+        <router-link to="/guide_desk">导旅: 导游管理工作台</router-link>
+    </div>
 </div>
 </template>
 

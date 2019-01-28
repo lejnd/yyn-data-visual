@@ -1,16 +1,20 @@
 <template>
 <div class="agency-desk">
-    <search-bar parent="旅行社管理" @getQuery="getChart"></search-bar>
+    <search-bar ref="searchChart" parent="旅行社管理" @getQuery="getChart"></search-bar>
     <div class="chart-box">
         <div class="right">
             <div class="map-chart" id="map_chart"></div>
         </div>
         <div class="left">
+            <div class="title">{{region}}旅行社及占比</div>
+            <div class="deco">总数：{{total}}</div>
             <div class="bar-chart" id="agency_rate"></div>
+            <div class="title">旅行社点子行程单填报数量</div>
             <div class="bar-chart" id="agency_comp"></div>
         </div>
+        <Spin size="large" fix v-if="spinShow"></Spin>
     </div>
-    <search-bar title="违规旅行社重点监管名单" @getQuery="getList"></search-bar>
+    <search-bar ref="searchList" title="违规旅行社重点监管名单" @getQuery="getList"></search-bar>
     <div class="list-box">
         <div class="right">
             <Table
@@ -23,20 +27,20 @@
         </div>
         <div class="left">
             <div class="msg">
-                <Icon type="md-volume-up" :color="iconColor" />{{msg.name}}新增一家扣分旅行社
+                <Icon type="md-volume-up" :color="iconColor" />{{msg.name}}新增一条扣分记录
             </div>
             <div class="roll-header">
-                <ul class="table-row">
+                <ul class="table-row" style="height: 30px;">
                     <li v-for="name in names" :key="name">{{name}}</li>
                 </ul>
             </div>
             <div class="roll-body">
                 <div class="roll" :class="{anim: animate}" @mouseenter="stopRoll" @mouseleave="roll">
-                    <ul class="table-row" v-for="(item, index) in rollData" :key="index">
+                    <ul class="table-row" v-for="(item, index) in rollData" :key="index" style="min-height: 30px;">
                         <li><Tooltip :content="item.name">{{item.name}}</Tooltip></li>
                         <li><Tooltip :content="item.department">{{item.department}}</Tooltip></li>
                         <li><Tooltip :content="item.reason">{{item.reason}}</Tooltip></li>
-                        <li><Tooltip :content="item.while">{{item.while}}</Tooltip></li>
+                        <li><Tooltip :content="item.while">{{item.time}}</Tooltip></li>
                         <li><Tooltip :content="item.deduction">{{item.deduction}}</Tooltip></li>
                     </ul>
                 </div>
@@ -67,13 +71,9 @@ export default {
                 tooltip: true
             }, {
                 align: 'center',
-                key: 'deduction',
+                key: 'total_value',
                 title: '累计扣分',
-                tooltip: true
-            }, {
-                align: 'center',
-                key: 'department',
-                title: '扣分部门',
+                width: 80,
                 tooltip: true
             }, {
                 align: 'center',
@@ -82,60 +82,67 @@ export default {
                 tooltip: true
             }],
             names: [ '旅行社名称', '扣分部门', '扣分原因', '累计时间', '累计扣分' ],
-            tableData: [
-                { name: '昆明A旅行社', deduction: '1', department: '昆明旅发委', area: '昆明市五华区' },
-                { name: '昆明A旅行社', deduction: '2', department: '昆明旅发委', area: '昆明市五华区' },
-                { name: '昆明A旅行社', deduction: '3', department: '昆明旅发委', area: '昆明市五华区' },
-                { name: '昆明A旅行社', deduction: '4', department: '昆明旅发委', area: '昆明市五华区' },
-                { name: '昆明A旅行社', deduction: '5', department: '昆明旅发委', area: '昆明市五华区' },
-                { name: '昆明A旅行社', deduction: '6', department: '昆明旅发委', area: '昆明市五华区' },
-                { name: '昆明A旅行社', deduction: '7', department: '昆明旅发委', area: '昆明市五华区' },
-                { name: '昆明A旅行社', deduction: '8', department: '昆明旅发委', area: '昆明市五华区' },
-                { name: '昆明A旅行社', deduction: '9', department: '昆明旅发委', area: '昆明市五华区' },
-                { name: '昆明A旅行社', deduction: '10', department: '昆明旅发委', area: '昆明市五华区' },
-                { name: '昆明A旅行社', deduction: '11', department: '昆明旅发委', area: '昆明市五华区' },
-                { name: '昆明A旅行社', deduction: '12', department: '昆明旅发委', area: '昆明市五华区' },
-                { name: '昆明A旅行社', deduction: '13', department: '昆明旅发委', area: '昆明市五华区' },
-            ],
-            rollData: [
-                { name: '昆明A旅行社', deduction: '1', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-                { name: '昆明A旅行社', deduction: '2', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-                { name: '昆明A旅行社', deduction: '3', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-                { name: '昆明A旅行社', deduction: '4', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-                { name: '昆明A旅行社', deduction: '5', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-                { name: '昆明A旅行社', deduction: '6', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-                { name: '昆明A旅行社', deduction: '7', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-                { name: '昆明A旅行社', deduction: '8', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-                { name: '昆明A旅行社', deduction: '9', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-                { name: '昆明A旅行社', deduction: '10', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-                { name: '昆明A旅行社', deduction: '11', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-                { name: '昆明A旅行社', deduction: '12', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-                { name: '昆明A旅行社', deduction: '13', department: '昆明旅发委', reason: '昆明市五华区', while: '2018-01-01 09:56' },
-            ],
+            tableData: [],
+            rollData: [],
+            region: '',
+            total: null,
+            spinShow: false
         }
     },
     methods: {
-        getChart(query) {
-            console.log(query);
+        async getChart(query) {
+            // console.log(query);
+            this.spinShow = true;
+            let agency = await this.$fly.post('/guideEvaluation/api/tsView/travelDistrict', query)
+            let agencyData = agency.data || {};
+            let list = agencyData.dataList || []
             
-        },
-        getList(query) {
-            console.log(query);
+            this.region = agencyData.region ? agencyData.region.name : ''
+            this.total = list.reduce((total, item) => total + item.value, 0)
+            this.initMap(list)
+            this.initRateBar(list)
+
+            let comp = await this.$fly.post('/guideEvaluation/api/tsView/travelItinerary', query)
+            let compData = comp.data || {};
+            let compList = compData.dataList || []
+            this.initCompBar(compList);
             
+            this.$refs.searchChart.toggleLoading()
+            this.spinShow = false;
         },
-        initMap() {
+        async getList(query) {
+            // console.log(query);
+            let res = await this.$fly.post('/guideEvaluation/api/tsView/violationQuery', query)
+            let data = res.data || {}
+            this.tableData = data.violateList || []
+            this.rollData = data.deductionList || []
+
+            this.$refs.searchList.toggleLoading()
+        },
+        async getMsg() {
+            let res = await this.$fly.post('/guideEvaluation/api/tsView/latestDeduction')
+            this.msg = res.data || {}
+        },
+        initMap(list) {
             const id = 'map_chart';
             this.$echarts.registerMap('yunnan', yunnan);
-            const option = OP.map();
+            const option = OP.agency_map(list);
             this.initChart(id, option);
+            let vm = this;
             this.myChart.on('click', function(params) {
                 if (!params.value) return;
-                console.log(params);
+                vm.$refs.searchChart.setCity(params.name)
+                vm.$refs.searchChart.onSubmit()
             })
         },
-        initRateBar() {
+        initRateBar(list) {
             const id = 'agency_rate';
-            const option = OP.bar();
+            const option = OP.bar('旅行社', list);
+            this.initChart(id, option);
+        },
+        initCompBar(list) {
+            const id = 'agency_comp';
+            const option = OP.agencyCompBar(list);
             this.initChart(id, option);
         },
         initChart(id = null, option = {}) {
@@ -152,7 +159,7 @@ export default {
                     this.rollData.shift();
                     this.animate = false;
                 }, 500)
-            }, 2000)
+            }, 5000)
         },
         stopRoll() {
             clearInterval(this.interval);
@@ -160,6 +167,12 @@ export default {
     },
     mounted() {
         this.roll()
+        this.$refs.searchChart.onSubmit()
+        this.$refs.searchList.onSubmit()
+        this.getMsg()
+        setInterval(() => {
+            this.getMsg()
+        }, 60000)
     }
 }
 </script>
@@ -167,6 +180,7 @@ export default {
 <style lang="less">
 .agency-desk {
     .chart-box {
+        position: relative;
         padding: 0 20px;
         display: flex;
         justify-content: space-between;
@@ -174,18 +188,31 @@ export default {
         padding: 10px 0;
         // border-bottom: 1px solid #ddd;
         .right {
-            width: 35%;
+            width: 39%;
             .map-chart {
                 min-height: 400px;
             }
         }
         .left {
-            width: 63%;
+            width: 60%;
             display: flex;
             flex-flow: column;
             .bar-chart {
-                height: 300px;
+                height: 380px;
                 width: 100%;
+            }
+            .title {
+                text-align: center;
+                height: 35px;
+                line-height: 35px;
+                font-size: 14px;
+                color: #333;
+                font-weight: 500;
+            }
+            .deco {
+                text-align: center;
+                font-size: 12px;
+                color: #999;
             }
         }
     }
@@ -229,19 +256,18 @@ export default {
             }
             ul.table-row {
                 display: flex;
-                width: 100%;
-                height: 30px;
                 align-items: center;
+                // border-bottom: 1px solid #ddd;
+                border-right: 1px solid #ddd;
+                border-left: 1px solid #ddd;                
+                padding: 5px 0;
+                box-sizing: content-box;
                 li {
                     flex: 1;
                     text-align: center;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
                     &:last-child {
                         flex: none;
                         width: 58px;
-                        padding-right: 10px;
                     }
                 }
             }
@@ -250,11 +276,11 @@ export default {
                 background-color: #f3f3f3;
             }
             .roll-body {
-                height: 300px;
+                height: 480px;
                 overflow: hidden;
                 .anim{
                     transition: all 0.5s;
-                    margin-top: -30px;
+                    margin-top: -46px;
                 }
             }
         }

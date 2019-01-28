@@ -9,22 +9,22 @@
     <div class="title" v-if="title">{{title}}</div>
     <Form class="search-form" ref="form" :model="form" inline>
         <FormItem label="行政区划" :label-width="80" style="width:200px" prop="city">
-            <Select v-model="form.city" placeholder="州市" @on-change="setChildCityList()">
+            <Select v-model="form.city" :disabled="disCity" placeholder="州市" @on-change="setChildCityList()">
                 <Option
                 v-for="item in cityList"
                 :value="item.value"
                 :key="item.value">
-                {{ item.label }}
+                {{ item.name }}
                 </Option>
             </Select>
         </FormItem>
         <FormItem style="width:120px" prop="county">
-            <Select v-model="form.county" placeholder="区县">
+            <Select v-model="form.county" :disabled="disCounty" placeholder="区县">
                 <Option
                 v-for="item in countyList"
                 :value="item.value"
                 :key="item.value">
-                {{ item.label }}
+                {{ item.name }}
                 </Option>
             </Select>
         </FormItem>
@@ -47,15 +47,16 @@
             style="width:100%">
             </DatePicker>
         </FormItem>
-        <FormItem :label-width="40">
-            <Button @click="onReset('form')">清空</Button>
-            <Button type="primary" @click="onSubmit()" style="margin-left: 8px">查询</Button>
+        <FormItem>
+            <Button :disabled="loading" @click="onReset('form')">清空</Button>
+            <Button type="primary" :loading="loading" @click="onSubmit()" style="margin-left: 8px">查询</Button>
         </FormItem>
     </Form>
 </div>
 </template>
 
 <script>
+import dayjs from 'dayjs'
 export default {
     name: 'SearchBar',
     props: {
@@ -71,9 +72,9 @@ export default {
     data() {
         return {
             form: {
-                city: null,
-                county: null,
-                level: '00',
+                city: this.$region == '34' || this.$region.length == 4 ? '' : this.$region,
+                county: this.$region.length == 4 ? this.$region : '',
+                level: '',
                 dateRange: []
             },
             cityList: [],
@@ -84,7 +85,10 @@ export default {
                 { value: '02', label: '二星级' },
                 { value: '03', label: '三星级' },
                 { value: '04', label: '四星级' }
-            ]
+            ],
+            loading: false,
+            disCity: true,
+            disCounty: true,
         }
     },
     methods: {
@@ -94,17 +98,69 @@ export default {
                 city: f.city,
                 county: f.county,
                 level: f.level,
-                startDate: f.dateRange[0] || '',
-                endDate: f.dateRange[1] || ''
+                startDate: f.dateRange[0] ? dayjs(f.dateRange[0]).format('YYYY-MM-DD') : '',
+                endDate: f.dateRange[1] ? dayjs(f.dateRange[1]).format('YYYY-MM-DD') : ''
             }
-            this.$emit('getQuery', query);
+            let formData = new FormData();
+            formData.append('city', query.city);
+            formData.append('county', query.county);
+            formData.append('level', query.level);
+            formData.append('startDate', query.startDate);
+            formData.append('endDate', query.endDate);
+            this.toggleLoading();
+            this.$emit('getQuery', formData);
+        },
+        getCity() {
+            let formData = new FormData();
+            formData.append('city', '34');
+            this.$fly.post('/guideEvaluation/api/common/queryCity', formData)
+            .then((res) => {
+                let data = res.data || {}
+                this.cityList = data.city || []
+            })
+            .catch((err) => {
+                this.$Message.warning(err ? err.msg || err : '请求失败');                
+            })
+        },
+        toggleLoading() {
+            this.loading = !this.loading;
         },
         setChildCityList() {
-            console.log(1);
-            
+            let formData = new FormData();
+            formData.append('city', this.form.city);
+            this.$fly.post('/guideEvaluation/api/common/queryDistrict', formData)
+            .then((res) => {
+                let data = res.data || {}
+                this.countyList = data.district || []
+            })
+            .catch((err) => {
+                this.$Message.warning(err ? err.msg || err : '请求失败');                
+            })
         },
         onReset(name) {
-            this.$refs[name].resetFields();
+            this.form = {
+                city: this.$region == '34' || this.$region.length == 4 ? '' : this.$region,
+                county: this.$region.length == 4 ? this.$region : '',
+                level: '',
+                dateRange: []
+            },
+            this.onSubmit();
+        },
+        setCity(v) {
+            const obj = this.cityList.filter(item => item.name == v)[0]
+            const code = obj ? obj.value : ''
+            this.form.city = code;
+        }
+    },
+    mounted () {
+        this.getCity()
+        if (this.$region == '34') {
+            this.disCity = false;
+            this.disCounty = false;
+        }
+        if (this.$region.length == 3) {
+            this.disCounty = false;
+            this.setChildCityList()
         }
     }
 }

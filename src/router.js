@@ -8,6 +8,7 @@ import Home from './views/home.vue'
 // import ObjectType from './views/objectType.vue';
 
 import AgencyDesk from './views/agencyDesk.vue'
+import GuideDesk from './views/guideDesk.vue'
 
 Vue.use(Router)
 
@@ -44,6 +45,11 @@ export default new Router({
       path: '/agency_desk',
       name: 'AgencyDesk',
       component: AgencyDesk
+    },
+    {
+      path: '/guide_desk',
+      name: 'GuideDesk',
+      component: GuideDesk
     },
     // {
     //   path: '/about',
