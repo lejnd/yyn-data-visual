@@ -1,12 +1,35 @@
+const regions = ['昆明', '曲靖', '玉溪', '保山', '昭通', '丽江', '普洱', '临沧', '德宏', '怒江', '迪庆', '大理', '楚雄', '红河', '文山', '西双版纳']
 
-const agency_map = function(data) {
+const agency_map = function(data, regionCode) {
+    let total = data ? data.reduce((total, item) => total + item.value, 0) : 0
+    let list = regions.map(name => {
+        let obj = data ? data.filter(item => item.name == name)[0] || {} : {}
+        let value = obj.value
+        return {
+            name: name,
+            value: value
+        }
+    })
+    
+    if (regionCode != '34') {
+        list = list.map((item) => {
+            if (item.value) {
+                return Object.assign({}, item, {
+                    value: total
+                })
+            } else {
+                return item
+            }
+        })
+    }
+    
     return {
         tooltip: {
             trigger: 'item',
             // formatter: '{b}<br/>：{c}'
             formatter: function(params) {
                 if(params.value) {
-                    return `${params.name}<br>投诉量：${params.value}起`
+                    return `${params.name}<br>${params.value}家旅行社`
                 }
             }
         },
@@ -18,7 +41,7 @@ const agency_map = function(data) {
             itemWidth: 10,
             itemHeight: 60,
             inRange: {
-                color: ['lightskyblue','yellow', 'orangered']
+                color: ['#ADD7FF']
             }
         },
         series: [
@@ -28,7 +51,12 @@ const agency_map = function(data) {
                 aspectScale: 0.88,
                 zoom: 1.2,
                 itemStyle:{
-                    areaColor: 'lightskyblue'
+                    areaColor: '#87C1FF'
+                },
+                emphasis: {
+                    itemStyle: {
+                        areaColor: '#60A8FF'
+                    },
                 },
                 label: {
                     show: true,
@@ -37,7 +65,7 @@ const agency_map = function(data) {
                         show: true
                     }
                 },
-                data: data || [{name: '昆明', value: 20057.34}],
+                data: list,
                 // 自定义名称映射
                 nameMap: {
                     '迪庆藏族自治州': '迪庆',
@@ -62,7 +90,29 @@ const agency_map = function(data) {
     }
 }
 
-const guide_map = function(data) {
+const guide_map = function(data, regionCode) {
+    let total = data ? data.reduce((total, item) => total + item.value, 0) : 0
+    let list = regions.map(name => {
+        let obj = data ? data.filter(item => item.name == name)[0] || {} : {}
+        let value = obj.value
+        return {
+            name: name,
+            value: value
+        }
+    })
+
+    if (regionCode != '34') {
+        list = list.map((item) => {
+            if (item.value) {
+                return Object.assign({}, item, {
+                    value: total
+                })
+            } else {
+                return item
+            }
+        })
+    }
+
     return {
         tooltip: {
             trigger: 'item',
@@ -81,7 +131,7 @@ const guide_map = function(data) {
             itemWidth: 8,
             itemHeight: 60,
             inRange: {
-                color: ['lightskyblue','yellow', 'orangered']
+                color: ['#ADD7FF']
             }
         },
         series: [
@@ -91,7 +141,12 @@ const guide_map = function(data) {
                 aspectScale: 0.88,
                 zoom: 1.2,
                 itemStyle:{
-                    areaColor: 'lightskyblue'
+                    areaColor: '#87C1FF'
+                },
+                emphasis: {
+                    itemStyle: {
+                        areaColor: '#60A8FF'
+                    },
                 },
                 label: {
                     show: true,
@@ -100,7 +155,7 @@ const guide_map = function(data) {
                         show: true
                     }
                 },
-                data: data || [{name: '昆明', value: 20057.34}],
+                data: list,
                 // 自定义名称映射
                 nameMap: {
                     '迪庆藏族自治州': '迪庆',
@@ -140,7 +195,7 @@ const bar = function(name, list) {
                 //     ${data.value}`
                 // } else {
                     return `地区：${params.name}<br/>
-                    ${params.seriesName}：${params.value}名<br/>
+                    ${params.seriesName}：${params.value}${name=='导游'?'名':'家'}<br/>
                     占比：${obj.ratio}%`
                 // }
             }
@@ -317,7 +372,7 @@ const agencyCompBar = function(list) {
 
 const langBar = function(name, list) {
     if (name == '导游语种分布') {
-        const obj = list[0]
+        const obj = list[0] || {}
         list = Object.keys(obj).map(item => ({ name: item, value: obj[item] }))
     }
     let option = {
@@ -395,7 +450,7 @@ const pie = function(title, list, radius) {
             trigger: 'item',
             formatter: "{b}: {c} ({d}%)"
         },
-        color:['#4C6293', '#FF7656', '#5AD5E0', '#338BFF', '#29CC85'],
+        color:['#4C6293', '#5AD5E0', '#338BFF', '#29CC85'],
         series: [
             {
                 name:'导游',
@@ -432,7 +487,7 @@ const pie = function(title, list, radius) {
                 labelLine: {
                     normal: {
                         show: false,
-                        length: 5
+                        length: 10
                     }
                 },
                 data: data

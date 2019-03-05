@@ -2,6 +2,7 @@
 <div class="guide-desk">
     <search-bar ref="searchBar"
     parent="导游管理"
+    guide
     @getQuery="getChart">
     </search-bar>
     <div class="area chart-box">
@@ -95,7 +96,7 @@ export default {
         async getChart(query) {
             // console.log(query);
             this.spinShow = true
-            let area = await this.$fly.post('/guideEvaluation/api/tsView/guideStatistics/area', query)            
+            let area = await this.$fly.post('/evaluation/api/tsView/guideStatistics/area', query)            
             let areaData = area.data || {}
             let areaList = areaData.areaList || []
             this.region = areaData.region ? areaData.region.name : ''
@@ -103,8 +104,8 @@ export default {
             this.initMap(areaList);
             this.initRateBar(areaList);
 
-            let sex = await this.$fly.post('/guideEvaluation/api/tsView/guideStatistics/sex', query)
-            let age = await this.$fly.post('/guideEvaluation/api/tsView/guideStatistics/age', query)
+            let sex = await this.$fly.post('/evaluation/api/tsView/guideStatistics/sex', query)
+            let age = await this.$fly.post('/evaluation/api/tsView/guideStatistics/age', query)
             let sexData = sex.data || {}
             let ageData = age.data || {}
             let sexList = sexData.sexList || []
@@ -112,8 +113,8 @@ export default {
             this.initPie('sex_pie', '导游性别分布', sexList)
             this.initPie('age_pie', '导游年龄分布', ageList)
 
-            let lang = await this.$fly.post('/guideEvaluation/api/tsView/guideStatistics/language', query)
-            let nation = await this.$fly.post('/guideEvaluation/api/tsView/guideStatistics/nation', query)
+            let lang = await this.$fly.post('/evaluation/api/tsView/guideStatistics/language', query)
+            let nation = await this.$fly.post('/evaluation/api/tsView/guideStatistics/nation', query)
             let langData = lang.data || {}
             let nationData = nation.data || {}
             let langList = langData.languageList || {}
@@ -126,10 +127,13 @@ export default {
             this.spinShow = false
         },
         async getList() {
-            let score = await this.$fly.post('/guideEvaluation/api/tsView/guideScoreRank?type=score')
-            let deduction = await this.$fly.post('/guideEvaluation/api/tsView/guideScoreRank?type=deduction')
-            this.scoreList = score.data;
-            this.deductionList = deduction.data;
+            let score = await this.$fly.post('/evaluation/api/tsView/guideScoreRank', { type: 'score' })
+            let deduction = await this.$fly.post('/evaluation/api/tsView/guideScoreRank', { type: 'deduction' })
+            let list1 = score.data || [];
+            let list2 = deduction.data || [];
+            this.scoreList = list1;
+            this.deductionList = list2.map(item => Object.assign({}, item, { value: '-' + item.value }));
+
         },
         initRateBar(list) {
             const id = 'guide_rate';
@@ -160,14 +164,16 @@ export default {
         initMap(list) {
             const id = 'guide_map';
             this.$echarts.registerMap('yunnan', yunnan);
-            const option = OP.guide_map(list);
+            const option = OP.guide_map(list, this.$region);
             this.initChart(id, option);
             let vm = this
             this.myChart.off('click')
             this.myChart.on('click', function(params) {
-                if (!params.value) return;
-                vm.$refs.searchBar.setCity(params.name)
-                vm.$refs.searchBar.onSubmit()
+                // if (!params.value) return;
+                if (vm.$region == '34') {
+                    vm.$refs.searchBar.setCity(params.name)
+                    vm.$refs.searchBar.onSubmit()
+                }
             })
         },
         initChart(id = null, option = {}) {

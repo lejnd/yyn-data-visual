@@ -9,7 +9,7 @@
             <div class="title">{{region}}旅行社及占比</div>
             <div class="deco">总数：{{total}}</div>
             <div class="bar-chart" id="agency_rate"></div>
-            <div class="title">旅行社点子行程单填报数量</div>
+            <div class="title">旅行社电子行程单填报数量</div>
             <div class="bar-chart" id="agency_comp"></div>
         </div>
         <Spin size="large" fix v-if="spinShow"></Spin>
@@ -93,7 +93,7 @@ export default {
         async getChart(query) {
             // console.log(query);
             this.spinShow = true;
-            let agency = await this.$fly.post('/guideEvaluation/api/tsView/travelDistrict', query)
+            let agency = await this.$fly.post('/evaluation/api/tsView/travelDistrict', query)
             let agencyData = agency.data || {};
             let list = agencyData.dataList || []
             
@@ -102,7 +102,7 @@ export default {
             this.initMap(list)
             this.initRateBar(list)
 
-            let comp = await this.$fly.post('/guideEvaluation/api/tsView/travelItinerary', query)
+            let comp = await this.$fly.post('/evaluation/api/tsView/travelItinerary', query)
             let compData = comp.data || {};
             let compList = compData.dataList || []
             this.initCompBar(compList);
@@ -112,27 +112,31 @@ export default {
         },
         async getList(query) {
             // console.log(query);
-            let res = await this.$fly.post('/guideEvaluation/api/tsView/violationQuery', query)
+            let res = await this.$fly.post('/evaluation/api/tsView/violationQuery', query)
             let data = res.data || {}
-            this.tableData = data.violateList || []
-            this.rollData = data.deductionList || []
+            let list1 = data.violateList || []
+            let list2 = data.deductionList || []
+            this.tableData = list1.map(item => Object.assign({}, item, { total_value: '-' + item.total_value }));
+            this.rollData = list2.map(item => Object.assign({}, item, { deduction: '-' + item.deduction }));
 
             this.$refs.searchList.toggleLoading()
         },
         async getMsg() {
-            let res = await this.$fly.post('/guideEvaluation/api/tsView/latestDeduction')
+            let res = await this.$fly.post('/evaluation/api/tsView/latestDeduction')
             this.msg = res.data || {}
         },
         initMap(list) {
             const id = 'map_chart';
             this.$echarts.registerMap('yunnan', yunnan);
-            const option = OP.agency_map(list);
+            const option = OP.agency_map(list, this.$region);
             this.initChart(id, option);
             let vm = this;
             this.myChart.on('click', function(params) {
-                if (!params.value) return;
-                vm.$refs.searchChart.setCity(params.name)
-                vm.$refs.searchChart.onSubmit()
+                // if (!params.value) return;
+                if (vm.$region == '34') {
+                    vm.$refs.searchChart.setCity(params.name)
+                    vm.$refs.searchChart.onSubmit()
+                }
             })
         },
         initRateBar(list) {
@@ -258,8 +262,8 @@ export default {
                 display: flex;
                 align-items: center;
                 // border-bottom: 1px solid #ddd;
-                border-right: 1px solid #ddd;
-                border-left: 1px solid #ddd;                
+                // border-right: 1px solid #ddd;
+                // border-left: 1px solid #ddd;                
                 padding: 5px 0;
                 box-sizing: content-box;
                 li {

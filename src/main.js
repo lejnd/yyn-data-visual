@@ -18,10 +18,10 @@ Vue.use(iView);
 Vue.config.productionTip = false;
 
 fly.config = {
-  // headers: {
-  //   StateProperty: StateProperty,
-  //   'Content-Type': 'application/json;charset=UTF-8'
-  // },
+  headers: {
+    // StateProperty: StateProperty,
+    'Content-Type': 'application/x-www-form-urlencoded'
+  },
   baseURL: debug ? '/api' : '',             //请求基地址
   timeout: 0,             //超时时间，为0时则无超时限制
   withCredentials: false    //跨域时是否发送cookie
@@ -63,10 +63,10 @@ Vue.prototype.$echarts = echarts;
 // Vue.prototype.$ = $;
 
 // 获取用户信息
-fly.post('/guideEvaluation/api/common/getUser')
+fly.post('/evaluation/api/common/getUser')
 .then((user) => {
-  let orgInfo = user.OrgInfo || {}
-  let region = orgInfo.OrgRegionId || '34'
+  let orgInfo = user.data.OrgInfo || {}
+  let region = orgInfo.orgRegionId || '34'
   Vue.prototype.$region = region;
 
   new Vue({
